@@ -1,0 +1,7 @@
+mongodb_data_folder/
+
+.idea/
+
+Posts.json
+Tags.json
+Votes.json
