@@ -1,22 +1,21 @@
 public abstract class StringConstants {
-    public static final String LOGO = "  ________.__            __    __           __________           .___  .___.__  __   \n" +
-            " /  _____/|  |__   _____/  |__/  |_  ____   \\______   \\ ____   __| _/__| _/|__|/  |_ \n" +
-            "/   \\  ___|  |  \\_/ __ \\   __\\   __\\/  _ \\   |       _// __ \\ / __ |/ __ | |  \\   __\\\n" +
-            "\\    \\_\\  \\   Y  \\  ___/|  |  |  | (  <_> )  |    |   \\  ___// /_/ / /_/ | |  ||  |  \n" +
-            " \\______  /___|  /\\___  >__|  |__|  \\____/   |____|_  /\\___  >____ \\____ | |__||__|  \n" +
-            "        \\/     \\/     \\/                            \\/     \\/     \\/    \\/           ";
+    public static final String LOGO = "__________               __  .__                  ________                      _____.__                 \n" +
+            "\\______   \\ ____   _____/  |_|  |   ____   ____   \\_____  \\___  __ ____________/ ____\\  |   ______  _  __\n" +
+            " |    |  _//  _ \\ /  _ \\   __\\  | _/ __ \\ / ___\\   /   |   \\  \\/ // __ \\_  __ \\   __\\|  |  /  _ \\ \\/ \\/ /\n" +
+            " |    |   (  <_> |  <_> )  | |  |_\\  ___// /_/  > /    |    \\   /\\  ___/|  | \\/|  |  |  |_(  <_> )     / \n" +
+            " |______  /\\____/ \\____/|__| |____/\\___  >___  /  \\_______  /\\_/  \\___  >__|   |__|  |____/\\____/ \\/\\_/  \n" +
+            "        \\/                             \\/_____/           \\/          \\/                                 ";
 
 
-    public static final String INTRO = "Welcome to Ghetto Reddit\n" +
+    public static final String INTRO = "Welcome to Bootleg Overflow!~";
+    public static final String HELP =
             "The following letters trigger certain functionalities:\n" +
             "p - post a question\n" +
             "s - search for a post\n" +
             "a - answer a post\n" +
             "v - give a vote\n" +
             "h - view this help again\n" +
-            "< - back, does not work if already on main menu\n" +
-            "l - logut\n" +
-            "exit - logout\n";
+            "exit - leave\n";
 
     public static final String INVALID_INPUT = "INVALID INPUT";
 

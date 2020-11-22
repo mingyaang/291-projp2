@@ -19,30 +19,42 @@ public class Main {
 
     public Main() throws NoSuchMethodException {
         cmds = new HashMap<String, Method>() {{ // initialize the commands into hashmap of methods
-            put("p", Main.class.getMethod("postQuestion"));
-            put("s", Main.class.getMethod("searchPost"));
-            put("a", Main.class.getMethod("answerPost"));
+//            put("p", Main.class.getMethod("postQuestion"));
+//            put("s", Main.class.getMethod("searchPost"));
+//            put("a", Main.class.getMethod("answerPost"));
             put("h", Main.class.getMethod("help"));
-            put("l", Main.class.getMethod("listAnswers"));
-            put("v", Main.class.getMethod("vote"));
+//            put("l", Main.class.getMethod("listAnswers"));
+//            put("v", Main.class.getMethod("vote"));
         }};
     }
 
     public static void main(String[] args) throws NoSuchMethodException {
-        if(args != null || args.length != 1) {
+        if(args == null || args.length != 1) {
             out.println("Invalid cmd line arguments on start");
             return;
         }
 
-        dbController = new DBController(Integer.valueOf(args[0]));
+        // TODO SWITCH THIS BACK TO NORMAL CONTROLLER IF YOU NEED DB MADE
+        dbController = new DBController(Integer.valueOf(args[0]), true);
         Main mainView = new Main();
         mainView.show();
     }
 
     public void show() {
         out.println(StringConstants.LOGO);
+        out.println(StringConstants.INTRO);
 
         promptUid();
+
+        help();
+        while(true) {
+            System.out.print("cmd: ");
+            String cmd = scanner.nextLine();
+            if(parseInput(cmd))
+                break;
+        }
+
+        System.out.println(StringConstants.EXIT_MESSAGE);
     }
 
     /**
@@ -53,30 +65,53 @@ public class Main {
         out.println("Would you like to provide a uid ? (y/n)");
         String res = scanner.nextLine();
         if(res != null && res.compareTo("y") == 0) {
-            out.println("uid: ");
-            curUserUid = scanner.nextLine();
+            out.print("uid: ");
+            while(true) {
+                curUserUid = scanner.nextLine();
+                try {
+                    Long.parseLong(curUserUid);
+                    break;
+                } catch (NumberFormatException e) {
+                    out.println("uids are numeric only!");
+                }
+            }
+
             giveReport();
         }
     }
 
+    // TODO GIVE A REPORT WHEN USER LOGINS
     public void giveReport() {
+        int numQOwned = 0;
+        double avgScoreOnQs = 0;
+        int numAOwned = 0;
+        double avgScoreOnAs = 0;
+        int votesForUser = 0;
+
+
 
     }
 
+    //
+    public void help() {
+        out.println(StringConstants.HELP);
+    }
 
 
     /**
      * return true if you want to exit the program false otherwise
      *
      * @param in
-     * @param permitted a list of permitted letters for this input
      * @return
      */
-    public boolean parseInput(String in, String permitted) {
+    public boolean parseInput(String in) {
+        if(in.compareTo("exit") == 0)
+            return true;
+
         // get method from map
         Method m = cmds.get(in);
         if (m == null) {
-            System.out.println(StringConstants.INVALID_INPUT);
+            out.println(StringConstants.INVALID_INPUT);
             return false;
         }
 
@@ -86,7 +121,7 @@ public class Main {
             res = m.invoke(this);
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Failure on invoking function");
+            out.println("Failure on invoking function");
             throw new RuntimeException("Failure on invoking method in cmds", e);
         }
 
