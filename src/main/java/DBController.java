@@ -1,21 +1,32 @@
 import com.google.gson.Gson;
+import com.mongodb.BasicDBObject;
+import com.mongodb.Block;
 import com.mongodb.MongoClient;
+import com.mongodb.bulk.UpdateRequest;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.BulkWriteOptions;
-import com.mongodb.client.model.Indexes;
-import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.client.model.*;
+import org.bson.BSON;
 import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
+import utils.Utils;
+import java.util.Scanner;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.security.PublicKey;
+import java.util.*;
 import java.util.logging.Logger;
+
+import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Updates.*;
+import com.mongodb.client.result.*;
+
+import javax.print.Doc;
 
 public class DBController {
     Logger mongoLogger = Logger.getLogger("org.mongodb.driver");
@@ -166,6 +177,15 @@ public class DBController {
             }
         }
 
+        if (p.Tags != null) {
+            words = p.Tags.split("\\W+");
+            for (String word : words) {
+                if (!word.isEmpty())
+                    terms.add(word.toLowerCase());
+            }
+
+        }
+
         p.Terms = new ArrayList<>(terms);
 
         timeForParsingTerms += System.currentTimeMillis() - startTime;
@@ -177,7 +197,97 @@ public class DBController {
      */
     private void createIndexes() {
         postsCol.createIndex(Indexes.text("Terms"));
+//        postsCol.createIndex(Indexes.compoundIndex(Indexes.text("Title"), Indexes.text("Body")));
     }
 
+    public boolean postQuestion(String uid, String type, String tile, String body, String[] tags) {
+        String formattedTags = "";
+        for (int i = 0; i < tags.length; i++) {
+            formattedTags += "<" + tags[i].trim() + ">";
+            Bson filter = eq("TagName", tags[i].trim());
+            Bson update = inc("Count", 1);
+            Document updateResult = tagsCol.findOneAndUpdate(filter, update);
+            if (updateResult == null) {
+                Document tag = new Document("_id", new ObjectId());
+                tag.append("Id", Utils.generateID(21)).append("TagName", tags[i].trim()).append("Count", 1);
+                tagsCol.insertOne(tag);
+            }
+        }
+        ArrayList<String> terms = getTerms(tile, body);
+        String datePosted = new Date().toString();
+
+        Document post = new Document("_id", new ObjectId());
+        post.append("Id", Utils.generateID(21)).append("Tags", formattedTags)
+                .append("PostTypeId", type).append("CreationDate", datePosted).append("OwnerUserId", uid)
+                .append("Score", 0).append("ViewCount", 0).append("AnswerCount", 0).append("CommentCount", 0)
+                .append("FavoriteCount", 0).append("ContentLicense", "CC BY-SA 2.5").append("Title", tile)
+                .append("Body", body).append("Terms", terms).append("AcceptedAnswerId", null);
+        postsCol.insertOne(post);
+        return true;
+    }
+
+    private ArrayList<String> getTerms(String title, String body) {
+        Set<String> terms = new HashSet<>();
+        String[] words = new String[]{};
+
+        if(title != null) {
+            words = title.split("\\W+");
+            for(String word : words) {
+                if(word.length() >= 3)
+                    terms.add(word.toLowerCase());
+            }
+        }
+
+        if(body != null) {
+            words = body.split("\\W+");
+            for(String word : words) {
+                if(word.length() >= 3)
+                    terms.add(word.toLowerCase());
+            }
+        }
+        return new ArrayList<>(terms);
+    }
+
+    public List<Document> search(String[] keywords) {
+        boolean allGT3 = true;
+        String search = "";
+        for (String key : keywords) {
+            search += key + " ";
+            if (key.length() < 3) {
+                allGT3 = false;
+            }
+        }
+        search.trim();
+
+        List<Document> results = new ArrayList<>();
+        if (allGT3) {
+            Bson filter = and(eq("PostTypeId", "1"), text(search));
+            postsCol.find(filter).forEach((Block<? super Document>) document -> results.add(document));
+        } else {
+            Bson filter = eq("PostTypeId", "1");
+            postsCol.find(filter).forEach((Block<? super Document>) document -> {
+                for (String key : keywords) {
+                    String title = ((String) document.get("Title"));
+                    String body = ((String) document.get("Body"));
+                    String tags = ((String) document.get("Tags"));
+                    boolean inTitle = title.contains(key);
+                    boolean inBody = body.contains(key);
+                    boolean inTags = tags.contains(key);
+                    if (inTags || inBody || inTitle ) {
+                        results.add(document);
+                        break;
+                    }
+                }
+
+            });
+        }
+
+        return results;
+
+    }
+
+    public void incrementViewCount(ObjectId id) {
+        postsCol.updateOne(eq("_id", new ObjectId(String.valueOf(id))), inc("ViewCount", 1));
+    }
 
 }

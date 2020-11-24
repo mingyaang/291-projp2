@@ -1,7 +1,10 @@
+import org.bson.types.ObjectId;
+
 import java.util.List;
 
 public class Post {
 
+    public ObjectId _id;
     public String Id;
     public String PostTypeId;
     public String AcceptedAnswerId;
