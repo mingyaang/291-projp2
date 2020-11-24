@@ -14,7 +14,8 @@ public abstract class StringConstants {
             "s - search for a post\n" +
             "a - answer a post\n" +
             "v - give a vote\n" +
-            "h - view this help again\n" +
+            "l - list the answers to selected question\n" +
+            "h - view this help and selected post again\n" +
             "exit - leave\n";
 
     public static final String INVALID_INPUT = "INVALID INPUT";

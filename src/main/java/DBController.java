@@ -226,6 +226,34 @@ public class DBController {
         return true;
     }
 
+    public FindIterable<Document> getPostsBy(String uid) {
+        // q owned // a owned // q votes // a votes
+        double[] res = new double[]{0, 0, 0, 0};
+
+        Bson fil = and(eq("OwnerUserId", uid));
+        return postsCol.find(fil);
+    }
+
+    public FindIterable<Document> getAnswersToQuestion(String parentId) {
+        Bson fil = and(eq("PostTypeId", "2"), eq("ParentId", parentId));
+        return postsCol.find(fil);
+    }
+
+    public FindIterable<Document> getAnswer(String id) {
+        Bson fil = and(eq("Id", id));
+        return postsCol.find(fil);
+    }
+
+    public FindIterable<Document> getVotesInPosts(Iterable<String> items) {
+        Bson fil = in("PostId", items);
+        return votesCol.find(fil);
+    }
+
+    public FindIterable<Document> getPostById(String id) {
+        Bson fil = eq("Id", id);
+        return postsCol.find(fil).limit(1);
+    }
+
     private ArrayList<String> getTerms(String title, String body) {
         Set<String> terms = new HashSet<>();
         String[] words = new String[]{};
