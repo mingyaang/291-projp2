@@ -270,9 +270,9 @@ public class DBController {
                     String title = ((String) document.get("Title"));
                     String body = ((String) document.get("Body"));
                     String tags = ((String) document.get("Tags"));
-                    boolean inTitle = title.contains(key);
-                    boolean inBody = body.contains(key);
-                    boolean inTags = tags.contains(key);
+                    boolean inTitle = title == null ? false : title.contains(key);
+                    boolean inBody = body == null ? false : body.contains(key);
+                    boolean inTags = tags == null ? false : tags.contains(key);
                     if (inTags || inBody || inTitle ) {
                         results.add(document);
                         break;
