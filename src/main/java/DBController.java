@@ -1,11 +1,14 @@
 import com.google.gson.Gson;
+import com.mongodb.Block;
 import com.mongodb.MongoClient;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.InsertOneModel;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -16,6 +19,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+
+import static com.mongodb.client.model.Filters.*;
 
 public class DBController {
     Logger mongoLogger = Logger.getLogger("org.mongodb.driver");
@@ -179,5 +184,32 @@ public class DBController {
         postsCol.createIndex(Indexes.text("Terms"));
     }
 
+    public FindIterable<Document> getPostsBy(String uid) {
+        // q owned // a owned // q votes // a votes
+        double[] res = new double[]{0, 0, 0, 0};
+
+        Bson fil = and(eq("OwnerUserId", uid));
+        return postsCol.find(fil);
+    }
+
+    public FindIterable<Document> getAnswersToQuestion(String parentId) {
+        Bson fil = and(eq("PostTypeId", "2"), eq("ParentId", parentId));
+        return postsCol.find(fil);
+    }
+
+    public FindIterable<Document> getAnswer(String id) {
+        Bson fil = and(eq("Id", id));
+        return postsCol.find(fil);
+    }
+
+    public FindIterable<Document> getVotesInPosts(Iterable<String> items) {
+        Bson fil = in("PostId", items);
+        return votesCol.find(fil);
+    }
+
+    public FindIterable<Document> getPostById(String id) {
+        Bson fil = eq("Id", id);
+        return postsCol.find(fil).limit(1);
+    }
 
 }

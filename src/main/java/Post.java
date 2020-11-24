@@ -5,9 +5,10 @@ public class Post {
     public String Id;
     public String PostTypeId;
     public String AcceptedAnswerId;
+    public String ParentId;
     public String CreationDate;
-    public int Score;
-    public int ViewCount;
+    public Integer Score;
+    public Integer ViewCount;
     public String Body;
     public String OwnerUserId;
     public String LastEditorUserId;
@@ -15,17 +16,11 @@ public class Post {
     public String LastActivityDate;
     public String Title;
     public String Tags;
-    public int AnswerCount;
-    public int CommentCount;
-    public int FavoriteCount;
+    public Integer AnswerCount;
+    public Integer CommentCount;
+    public Integer FavoriteCount;
     public String ContentLicense;
     public List<String> Terms;
-
-
-
-
-
-
 
     public Post() {}
 }
