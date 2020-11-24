@@ -134,7 +134,7 @@ public class Main {
         if(selectedPost == null)
             out.println("You haven't selected a post!");
         else if(selectedPost.PostTypeId == null)
-            out.println("Something went wrong, cannot verify this post is of type question");
+            out.println("You haven't selected a post or this post has no type :(");
         else if(selectedPost.PostTypeId.compareTo("1") != 0)
             out.println("This selected post is not a question!");
 
@@ -221,8 +221,11 @@ public class Main {
         else
             postType = "Special/Unknown Post Type";
 
+        out.println("PostType: " + postType);
+        if(postType.compareTo("Question") == 0 && selectedPost.Title != null)
+            out.println("Title: " + selectedPost.Title);
+
         if(selectedPost.Body != null) {
-            out.println("PostType: " + postType);
             out.print("Body: ");
             int prev = 0;
             for (int i = 80; i < selectedPost.Body.length(); i += 80) {
@@ -239,7 +242,7 @@ public class Main {
         if(selectedPost.CreationDate != null) {
             out.println("Creation Date: " + selectedPost.CreationDate);
         }
-        System.out.println(" -- * -- ----***---- -- * --");
+        System.out.println(" -- * ---- ---***--- * ---***--- ---- * --");
     }
 
     /**
