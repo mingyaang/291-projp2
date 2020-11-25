@@ -277,15 +277,22 @@ public class DBController {
     }
 
     public List<Document> search(String[] keywords) {
+        if (keywords.length == 0) {
+            return new ArrayList<Document>();
+        }
+
         boolean allGT3 = true;
         String search = "";
+        String regexSearch = "\\b(?:";
         for (String key : keywords) {
             search += key.trim() + " ";
+            regexSearch += key.trim().toLowerCase() + "|";
             if (key.trim().length() < 3) {
                 allGT3 = false;
             }
         }
         search.trim();
+        final String lt3Search = regexSearch.substring(0, regexSearch.length() - 1) + ")\\b";
 
         List<Document> results = new ArrayList<>();
         if (allGT3) {
@@ -294,20 +301,15 @@ public class DBController {
         } else {
             Bson filter = eq("PostTypeId", "1");
             postsCol.find(filter).forEach((Block<? super Document>) document -> {
-                for (String key : keywords) {
-                    key = key.trim();
-                    String title = ((String) document.get("Title"));
-                    String body = ((String) document.get("Body"));
-                    String tags = ((String) document.get("Tags"));
-                    boolean inTitle = title != null && Utils.stringContains(title.toLowerCase(), key.toLowerCase());
-                    boolean inBody = body != null && Utils.stringContains(body.toLowerCase(), key.toLowerCase());
-                    boolean inTags = tags != null && Utils.stringContains(tags.toLowerCase(), key.toLowerCase());
-                    if (inTags || inBody || inTitle ) {
-                        results.add(document);
-                        break;
-                    }
+                String title = ((String) document.get("Title"));
+                String body = ((String) document.get("Body"));
+                String tags = ((String) document.get("Tags"));
+                boolean inTitle = title != null && Utils.stringContains(title.toLowerCase(), lt3Search);
+                boolean inBody = body != null && Utils.stringContains(body.toLowerCase(), lt3Search);
+                boolean inTags = tags != null && Utils.stringContains(tags.toLowerCase(), lt3Search);
+                if (inTags || inBody || inTitle ) {
+                    results.add(document);
                 }
-
             });
         }
 

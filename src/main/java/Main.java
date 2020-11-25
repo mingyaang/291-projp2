@@ -45,7 +45,7 @@ public class Main {
         }
 
         // TODO SWITCH THIS BACK TO NORMAL CONTROLLER IF YOU NEED DB MADE
-        dbController = new DBController(Integer.valueOf(args[0]), true);
+        dbController = new DBController(Integer.valueOf(args[0]));
         Main mainView = new Main();
         mainView.show();
     }
@@ -287,14 +287,6 @@ public class Main {
             sTags = tags.split(",");
         }
 
-//        String genPid = Utils.generateID(4);
-//        Post checkPost = dbController.getPost(genPid);
-//        while (checkPost != null) {
-//            genPid = Utils.generateID(4);
-//            checkPost = dbController.getPost(genPid);
-//        }
-
-//        Date date = Utils.getSQLDate();
         Boolean status = dbController.postQuestion(curUserUid, "1", title, body, sTags);
         System.out.println("Thanks for posting your question!");
     }

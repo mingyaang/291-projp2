@@ -10,8 +10,7 @@ public class Utils {
         return RandomStringUtils.random(count, false, true);
     }
 
-    public static boolean stringContains(String key, String v) {
-        String pattern = "\\b" + v + "\\b";
+    public static boolean stringContains(String key, String pattern) {
         Pattern p = Pattern.compile(pattern);
         Matcher m = p.matcher(key);
         return m.find();
