@@ -1,6 +1,7 @@
 import com.google.gson.Gson;
 import com.mongodb.BasicDBObject;
 import com.mongodb.Block;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.bulk.UpdateRequest;
 import com.mongodb.client.FindIterable;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Updates.*;
@@ -40,6 +42,8 @@ public class DBController {
     long timeForParsingTerms = 0;
     long timeForParsingData;
     long timeForCreatingIndicies;
+
+    private String regexPtn = "[\\s*.;<>+\\-_)(?,}{\"\\[\\]\\|]+";
 
     public DBController(int port) {
 //        mongoLogger.setLevel(Level.SEVERE); // prevents log popup
@@ -162,7 +166,7 @@ public class DBController {
         String[] words = new String[]{};
 
         if(p.Title != null) {
-            words = p.Title.split("[\\s*.;<>+-_)(]+");
+            words = p.Title.split(regexPtn);
             for(String word : words) {
                 if(word.length() >= 3)
                     terms.add(word.toLowerCase());
@@ -170,7 +174,7 @@ public class DBController {
         }
 
         if(p.Body != null) {
-            words = p.Body.split("[\\s*.;<>+-_)(]+");
+            words = p.Body.split(regexPtn);
             for(String word : words) {
                 if(word.length() >= 3)
                     terms.add(word.toLowerCase());
@@ -178,7 +182,7 @@ public class DBController {
         }
 
         if (p.Tags != null) {
-            words = p.Tags.split("[\\s*.;<>+-_)(]+");
+            words = p.Tags.split(regexPtn);
             for (String word : words) {
                 if (!word.isEmpty())
                     terms.add(word.toLowerCase());
@@ -258,7 +262,7 @@ public class DBController {
         String[] words = new String[]{};
 
         if(title != null) {
-            words = title.split("[\\s*.;<>+-_)(]+");
+            words = title.split(regexPtn);
             for(String word : words) {
                 if(word.length() >= 3)
                     terms.add(word.toLowerCase());
@@ -266,7 +270,7 @@ public class DBController {
         }
 
         if(body != null) {
-            words = body.split("[\\s*.;<>+-_)(]+");
+            words = body.split(regexPtn);
             for(String word : words) {
                 if(word.length() >= 3)
                     terms.add(word.toLowerCase());
@@ -297,13 +301,15 @@ public class DBController {
                 allGT3 = false;
             }
         }
-        search = search.trim();
+//        search = search.trim();
         final String lt3Search = regexSearch.substring(0, regexSearch.length() - 1) + ")\\b";
 
         List<Document> results = new ArrayList<>();
         if (allGT3) {
-            Bson filter = and(eq("PostTypeId", "1"), text(search, new TextSearchOptions().caseSensitive(false)));
-            postsCol.find(filter).forEach((Block<? super Document>) document -> results.add(document));
+            Pattern pattern = Pattern.compile(lt3Search, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            BasicDBObject basicDBObject = new BasicDBObject("Terms", pattern).append("PostTypeId", "1");
+//            Bson filter = and(eq("PostTypeId", "1"), text(search, new TextSearchOptions().caseSensitive(false)));
+            postsCol.find(basicDBObject).forEach((Block<? super Document>) document -> results.add(document));
         } else {
             Bson filter = eq("PostTypeId", "1");
             postsCol.find(filter).forEach((Block<? super Document>) document -> {
