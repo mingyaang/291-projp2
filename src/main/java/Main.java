@@ -72,7 +72,7 @@ public class Main {
      * @return
      */
     public void promptUid() {
-        out.println("Would you like to provide a uid ? (y/n)");
+        out.println("Would you like to provide a uid ? (y)");
         String res = scanner.nextLine();
         if(res != null && res.compareTo("y") == 0) {
             out.print("uid: ");
@@ -82,7 +82,7 @@ public class Main {
                     Long.parseLong(curUserUid);
                     break;
                 } catch (NumberFormatException e) {
-                    out.println("uids are numeric only!");
+                    out.println("uids are numeric only! And they also have a limit of 18 chars!");
                 }
             }
 
@@ -163,12 +163,14 @@ public class Main {
 
         out.println("s to select a post, and any other entry to exit :)");
         String in = scanner.nextLine();
-        if(in.compareTo("s") == 0)
+        if(in.compareTo("s") == 0) {
             selectPost();
+        }
+
     }
 
     private void selectPost() {
-        out.println("Enter your post id below!");
+        out.print("Enter your post id :");
         String in = scanner.nextLine();
 
         FindIterable<Document> posts = dbController.getPostById(in);
