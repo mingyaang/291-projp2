@@ -170,7 +170,7 @@ public class Main {
     }
 
     private void selectPost() {
-        out.print("Enter your post id :");
+        out.print("Enter your post id: ");
         String in = scanner.nextLine();
 
         FindIterable<Document> posts = dbController.getPostById(in);
@@ -308,7 +308,7 @@ public class Main {
             System.out.println("This post is an answer");
         }
         else{
-            System.out.print("Enter your answer:");
+            System.out.print("Enter your answer: ");
             String answer = scanner.nextLine();
             if (answer != null){
                 Boolean status = dbController.postAnswer(curUserUid, "2", answer, selectedPost.Id);
