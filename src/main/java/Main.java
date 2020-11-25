@@ -45,7 +45,7 @@ public class Main {
         }
 
         // TODO SWITCH THIS BACK TO NORMAL CONTROLLER IF YOU NEED DB MADE
-        dbController = new DBController(Integer.valueOf(args[0]), true);
+        dbController = new DBController(Integer.valueOf(args[0]));
         Main mainView = new Main();
         mainView.show();
     }
