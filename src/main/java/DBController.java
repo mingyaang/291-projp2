@@ -280,8 +280,8 @@ public class DBController {
         boolean allGT3 = true;
         String search = "";
         for (String key : keywords) {
-            search += key + " ";
-            if (key.length() < 3) {
+            search += key.trim() + " ";
+            if (key.trim().length() < 3) {
                 allGT3 = false;
             }
         }
@@ -295,12 +295,13 @@ public class DBController {
             Bson filter = eq("PostTypeId", "1");
             postsCol.find(filter).forEach((Block<? super Document>) document -> {
                 for (String key : keywords) {
+                    key = key.trim();
                     String title = ((String) document.get("Title"));
                     String body = ((String) document.get("Body"));
                     String tags = ((String) document.get("Tags"));
-                    boolean inTitle = title == null ? false : title.contains(key);
-                    boolean inBody = body == null ? false : body.contains(key);
-                    boolean inTags = tags == null ? false : tags.contains(key);
+                    boolean inTitle = title != null && Utils.stringContains(title.toLowerCase(), key.toLowerCase());
+                    boolean inBody = body != null && Utils.stringContains(body.toLowerCase(), key.toLowerCase());
+                    boolean inTags = tags != null && Utils.stringContains(tags.toLowerCase(), key.toLowerCase());
                     if (inTags || inBody || inTitle ) {
                         results.add(document);
                         break;
