@@ -1,34 +1,29 @@
 import com.google.gson.Gson;
 import com.mongodb.BasicDBObject;
 import com.mongodb.Block;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.bulk.UpdateRequest;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.*;
-import org.bson.BSON;
+import com.mongodb.client.model.BulkWriteOptions;
+import com.mongodb.client.model.Indexes;
+import com.mongodb.client.model.InsertOneModel;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import utils.Utils;
-import java.util.Scanner;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.security.PublicKey;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.Filters.*;
-import static com.mongodb.client.model.Updates.*;
-import com.mongodb.client.result.*;
-
-import javax.print.Doc;
+import static com.mongodb.client.model.Updates.inc;
 
 public class DBController {
     Logger mongoLogger = Logger.getLogger("org.mongodb.driver");
@@ -46,7 +41,7 @@ public class DBController {
     private String regexPtn = "[\\s*.;<>+\\-_)(?,}{\"\\[\\]\\|]+";
 
     public DBController(int port) {
-//        mongoLogger.setLevel(Level.SEVERE); // prevents log popup
+        mongoLogger.setLevel(Level.SEVERE); // prevents log popup
         mongoClient = new MongoClient("localhost", port);
         db = mongoClient.getDatabase("291db");
         initCollections();
@@ -74,6 +69,7 @@ public class DBController {
 
     // call this if you want to skip the setup time
     public DBController(int port, boolean noDropAndImportFlag) {
+        mongoLogger.setLevel(Level.SEVERE); // prevents log popup
         mongoClient = new MongoClient("localhost", port);
         System.out.println("YOU ARE SKIPPING THE SETUP -- WARNING THIS IS ONLY ALLOWED IF YOU HAVE ALREADY SET UP THE DB AND DO NOT WISH TO REIMPORT DATA");
         db = mongoClient.getDatabase("291db");
@@ -106,7 +102,7 @@ public class DBController {
         List<InsertOneModel<Document>> docs = new ArrayList<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            for(int i = 0; i < 3; i++)      // skip first 3 lines of posts
+            for (int i = 0; i < 3; i++)      // skip first 3 lines of posts
                 br.readLine();
 
             String line;
@@ -117,7 +113,7 @@ public class DBController {
                 line = line.trim();
                 sb.append(line);
 
-                if(line.compareTo("},") == 0) {
+                if (line.compareTo("},") == 0) {
                     sb.deleteCharAt(sb.length() - 1); // remove last index
                     jsonObject = col == postsCol ? parsePostTerms(sb.toString()) : sb.toString();
                     docs.add(new InsertOneModel<>(Document.parse(jsonObject)));
@@ -154,6 +150,7 @@ public class DBController {
     /**
      * takes in some json representation and parses it to post object
      * then program adds new field terms into posts
+     *
      * @param s the string to convert to post
      * @return the new json string representaiton
      */
@@ -165,18 +162,18 @@ public class DBController {
         Set<String> terms = new HashSet<>();
         String[] words = new String[]{};
 
-        if(p.Title != null) {
+        if (p.Title != null) {
             words = p.Title.split(regexPtn);
-            for(String word : words) {
-                if(word.length() >= 3)
+            for (String word : words) {
+                if (word.length() >= 3)
                     terms.add(word.toLowerCase());
             }
         }
 
-        if(p.Body != null) {
+        if (p.Body != null) {
             words = p.Body.split(regexPtn);
-            for(String word : words) {
-                if(word.length() >= 3)
+            for (String word : words) {
+                if (word.length() >= 3)
                     terms.add(word.toLowerCase());
             }
         }
@@ -229,27 +226,26 @@ public class DBController {
         return true;
     }
 
-    public boolean postAnswer(String uid, String type, String answer, String quid){
+    public boolean postAnswer(String uid, String type, String answer, String quid) {
         ArrayList<String> terms = getTerms(answer, "", null);
         String datePosted = new Date().toString();
         Document post = new Document("_id", new ObjectId());
         post.append("Id", Utils.generateID(19)).append("PostTypeId", type).append("CreationDate", datePosted)
-            .append("OwnerUserId", uid).append("ParentId", quid).append("Score", 0).append("Body", answer)
-            .append("CommentCount", 0).append("ContentLicense", "CC BY-SA 2.5").append("Terms", terms);
+                .append("OwnerUserId", uid).append("ParentId", quid).append("Score", 0).append("Body", answer)
+                .append("CommentCount", 0).append("ContentLicense", "CC BY-SA 2.5").append("Terms", terms);
         postsCol.insertOne(post);
         return true;
     }
 
-    public boolean vote(String uid, String type, String pid){
+    public boolean vote(String uid, String type, String pid) {
         String datePosted = new Date().toString();
         Document vote = new Document("_id", new ObjectId());
-        if (uid != null){
+        if (uid != null) {
             vote.append("Id", Utils.generateID(19)).append("VoteTypeId", type).append("CreationDate", datePosted)
-                .append("PostId", pid).append("OwnerUserId", uid);
-        }
-        else {
+                    .append("PostId", pid).append("OwnerUserId", uid);
+        } else {
             vote.append("Id", Utils.generateID(19)).append("VoteTypeId", type).append("CreationDate", datePosted)
-                .append("PostId", pid).append("OwnerUserId", uid);
+                    .append("PostId", pid).append("OwnerUserId", uid);
         }
         votesCol.insertOne(vote);
         return true;
@@ -292,18 +288,18 @@ public class DBController {
         Set<String> terms = new HashSet<>();
         String[] words = new String[]{};
 
-        if(title != null) {
+        if (title != null) {
             words = title.split(regexPtn);
-            for(String word : words) {
-                if(word.length() >= 3)
+            for (String word : words) {
+                if (word.length() >= 3)
                     terms.add(word.toLowerCase());
             }
         }
 
-        if(body != null) {
+        if (body != null) {
             words = body.split(regexPtn);
-            for(String word : words) {
-                if(word.length() >= 3)
+            for (String word : words) {
+                if (word.length() >= 3)
                     terms.add(word.toLowerCase());
             }
         }
@@ -349,7 +345,7 @@ public class DBController {
                 boolean inTitle = title != null && Utils.stringContains(title.toLowerCase(), lt3Search);
                 boolean inBody = body != null && Utils.stringContains(body.toLowerCase(), lt3Search);
                 boolean inTags = tags != null && Utils.stringContains(tags.toLowerCase(), lt3Search);
-                if (inTags || inBody || inTitle ) {
+                if (inTags || inBody || inTitle) {
                     results.add(document);
                 }
             });

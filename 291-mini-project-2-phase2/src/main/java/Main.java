@@ -2,17 +2,11 @@ import com.google.gson.Gson;
 import com.mongodb.Block;
 import com.mongodb.client.FindIterable;
 import org.bson.Document;
-
-import org.bson.Document;
 import org.bson.types.ObjectId;
-import utils.Utils;
 
-import java.io.Console;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
-import java.sql.Date;
 import java.text.DecimalFormat;
-import java.util.*;
 import java.util.*;
 
 /**
@@ -39,7 +33,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws NoSuchMethodException {
-        if(args == null || args.length != 1) {
+        if (args == null || args.length != 1) {
             out.println("Invalid cmd line arguments on start");
             return;
         }
@@ -57,10 +51,10 @@ public class Main {
         promptUid();
 
         help();
-        while(true) {
+        while (true) {
             System.out.print("cmd: ");
             String cmd = scanner.nextLine();
-            if(parseInput(cmd))
+            if (parseInput(cmd))
                 break;
         }
 
@@ -69,14 +63,15 @@ public class Main {
 
     /**
      * prompts user for uid and calls for report
+     *
      * @return
      */
     public void promptUid() {
         out.println("Would you like to provide a uid ? (y)");
         String res = scanner.nextLine();
-        if(res != null && res.compareTo("y") == 0) {
+        if (res != null && res.compareTo("y") == 0) {
             out.print("uid: ");
-            while(true) {
+            while (true) {
                 curUserUid = scanner.nextLine();
                 try {
                     Long.parseLong(curUserUid);
@@ -91,7 +86,7 @@ public class Main {
     }
 
     public void giveReport() {
-        if(curUserUid == null || curUserUid.isEmpty())
+        if (curUserUid == null || curUserUid.isEmpty())
             return;
 
         // q owned // a owned // q votes // a votes
@@ -102,7 +97,7 @@ public class Main {
             String postType = (String) post.get("PostTypeId");
             Integer score = (Integer) post.get("Score");
             userPosts.add(post.getString("Id"));
-            if(postType != null && postType.compareTo("1") == 0) {
+            if (postType != null && postType.compareTo("1") == 0) {
                 res[0]++;
                 res[2] += score == null ? 0 : score;
             } else if (postType != null && postType.compareTo("2") == 0) {
@@ -112,8 +107,8 @@ public class Main {
         });
 
         DecimalFormat decimalFormat = new DecimalFormat("#0.00");
-        double averageQScore = res[0] == 0 ? 0 : res[2]/res[0];
-        double averageAScore = res[1] == 0 ? 0 : res[3]/res[1];
+        double averageQScore = res[0] == 0 ? 0 : res[2] / res[0];
+        double averageAScore = res[1] == 0 ? 0 : res[3] / res[1];
 
         out.println(" --------- REPORT ON USER : " + curUserUid + " ---------");
         out.println("Number Question Owned : " + decimalFormat.format(res[0]));
@@ -131,11 +126,11 @@ public class Main {
     }
 
     public void listAnswers() {
-        if(selectedPost == null)
+        if (selectedPost == null)
             out.println("You haven't selected a post!");
-        else if(selectedPost.PostTypeId == null)
+        else if (selectedPost.PostTypeId == null)
             out.println("You haven't selected a post or this post has no type :(");
-        else if(selectedPost.PostTypeId.compareTo("1") != 0)
+        else if (selectedPost.PostTypeId.compareTo("1") != 0)
             out.println("This selected post is not a question!");
 
         FindIterable<Document> ansForCurPost = dbController.getAnswer(selectedPost.AcceptedAnswerId);
@@ -148,13 +143,12 @@ public class Main {
         ansForCurPost = dbController.getAnswersToQuestion(selectedPost.Id);
 
         ansForCurPost.forEach((Block<? super Document>) post -> {
-            if (selectedPost.AcceptedAnswerId != null){
-                if(post.getString("Id").compareTo(selectedPost.AcceptedAnswerId) != 0) {
+            if (selectedPost.AcceptedAnswerId != null) {
+                if (post.getString("Id").compareTo(selectedPost.AcceptedAnswerId) != 0) {
                     out.println("----- ----- ----- ----- -----");
                     displayBasicAnswerInfo(post);
                 }
-            }
-            else{
+            } else {
                 out.println("----- ----- ----- ----- -----");
                 displayBasicAnswerInfo(post);
             }
@@ -163,7 +157,7 @@ public class Main {
 
         out.println("s to select a post, and any other entry to exit :)");
         String in = scanner.nextLine();
-        if(in.compareTo("s") == 0) {
+        if (in.compareTo("s") == 0) {
             selectPost();
         }
 
@@ -176,14 +170,14 @@ public class Main {
         FindIterable<Document> posts = dbController.getPostById(in);
         final boolean[] foundFlag = {false};
         posts.forEach((Block<? super Document>) post -> {
-            if(post != null) {
+            if (post != null) {
                 foundFlag[0] = true;
                 String postJson = post.toJson();
                 selectedPost = gson.fromJson(post.toJson(), Post.class);
             }
         });
 
-        if(!foundFlag[0]) {
+        if (!foundFlag[0]) {
             out.println("Wasn't able to find post " + in + " enter a valid id!");
             out.println("Post was reset to earlier selection !");
             return;
@@ -198,7 +192,7 @@ public class Main {
         out.println("Id: " + id);
 
         String body = post.getString("Body");
-        if(body.length() > 80) {
+        if (body.length() > 80) {
             body = body.substring(0, 81);
             body += "...";
         }
@@ -212,7 +206,7 @@ public class Main {
     public void help() {
         out.println(StringConstants.HELP);
 
-        if(selectedPost == null || selectedPost.Id == null)
+        if (selectedPost == null || selectedPost.Id == null)
             out.println("You have no currently selected post :)");
         else
             displayFullSelectedInfo();
@@ -222,18 +216,18 @@ public class Main {
         out.println(" --- * --- YOUR SELECTED POST --- * ---");
         out.println("Id: " + selectedPost.Id);
         String postType;
-        if(selectedPost.PostTypeId != null && selectedPost.PostTypeId.compareTo("1") == 0)
+        if (selectedPost.PostTypeId != null && selectedPost.PostTypeId.compareTo("1") == 0)
             postType = "Question";
-        else if(selectedPost.PostTypeId != null && selectedPost.PostTypeId.compareTo("2") == 0)
+        else if (selectedPost.PostTypeId != null && selectedPost.PostTypeId.compareTo("2") == 0)
             postType = "Answer";
         else
             postType = "Special/Unknown Post Type";
 
         out.println("PostType: " + postType);
-        if(postType.compareTo("Question") == 0 && selectedPost.Title != null)
+        if (postType.compareTo("Question") == 0 && selectedPost.Title != null)
             out.println("Title: " + selectedPost.Title);
 
-        if(selectedPost.Body != null) {
+        if (selectedPost.Body != null) {
             out.print("Body: ");
             int prev = 0;
             for (int i = 80; i < selectedPost.Body.length(); i += 80) {
@@ -243,11 +237,11 @@ public class Main {
             out.println(selectedPost.Body.substring(prev, selectedPost.Body.length()));
         }
 
-        if(selectedPost.Score != null) {
+        if (selectedPost.Score != null) {
             out.println("Score: " + selectedPost.Score);
         }
 
-        if(selectedPost.CreationDate != null) {
+        if (selectedPost.CreationDate != null) {
             out.println("Creation Date: " + selectedPost.CreationDate);
         }
         System.out.println(" -- * ---- ---***--- * ---***--- ---- * --");
@@ -260,7 +254,7 @@ public class Main {
      * @return
      */
     public boolean parseInput(String in) {
-        if(in.compareTo("exit") == 0)
+        if (in.compareTo("exit") == 0)
             return true;
 
         // get method from map
@@ -300,21 +294,18 @@ public class Main {
     }
 
     public void answerPost() {
-        if(selectedPost == null || selectedPost.Id == null){
+        if (selectedPost == null || selectedPost.Id == null) {
             System.out.println("Please select a post first");
             return;
-        }
-        else if(selectedPost.PostTypeId.equals("2")){
+        } else if (selectedPost.PostTypeId.equals("2")) {
             System.out.println("This post is an answer");
-        }
-        else{
+        } else {
             System.out.print("Enter your answer: ");
             String answer = scanner.nextLine();
-            if (answer != null){
+            if (answer != null) {
                 Boolean status = dbController.postAnswer(curUserUid, "2", answer, selectedPost.Id);
                 dbController.incrementAnswers(selectedPost._id);
-            }
-            else {
+            } else {
                 System.out.println("You need to input an answer");
                 answerPost();
                 return;
@@ -323,20 +314,19 @@ public class Main {
     }
 
     public void vote() {
-        if(selectedPost == null || selectedPost.Id == null){
+        if (selectedPost == null || selectedPost.Id == null) {
             System.out.println("Please select a post first");
             return;
         }
-        if (curUserUid != null){
-            try{
+        if (curUserUid != null) {
+            try {
                 FindIterable<Document> votes = dbController.getVotesInPost(selectedPost.Id);
-                    votes.forEach((Block<? super Document>) vote -> {
-                        if (curUserUid.equals(vote.getString("OwnerUserId"))){
-                            throw new SecurityException("You have already voted on this post!");
-                        }
-                    });
-                }
-            catch(SecurityException e){
+                votes.forEach((Block<? super Document>) vote -> {
+                    if (curUserUid.equals(vote.getString("OwnerUserId"))) {
+                        throw new SecurityException("You have already voted on this post!");
+                    }
+                });
+            } catch (SecurityException e) {
                 System.out.println("You have already voted on this post!");
                 return;
             }
@@ -380,7 +370,7 @@ public class Main {
                 System.out.println("Enter the id of the post you want to select");
                 String post = scanner.nextLine();
                 if (results.stream().anyMatch((searchResult -> {
-                    if (((String)searchResult.get("Id")).toLowerCase().compareTo(post.toLowerCase()) == 0) {
+                    if (((String) searchResult.get("Id")).toLowerCase().compareTo(post.toLowerCase()) == 0) {
                         selectedPost._id = (ObjectId) searchResult.get("_id");
                         selectedPost.Id = (String) searchResult.get("Id");
                         selectedPost.Title = (String) searchResult.get("Title");
