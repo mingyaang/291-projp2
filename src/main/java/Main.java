@@ -31,10 +31,10 @@ public class Main {
         cmds = new HashMap<String, Method>() {{ // initialize the commands into hashmap of methods
             put("p", Main.class.getMethod("postQuestion"));
             put("s", Main.class.getMethod("searchPost"));
-//            put("a", Main.class.getMethod("answerPost"));
+            put("a", Main.class.getMethod("answerPost"));
             put("h", Main.class.getMethod("help"));
             put("l", Main.class.getMethod("listAnswers"));
-//            put("v", Main.class.getMethod("vote"));
+            put("v", Main.class.getMethod("vote"));
         }};
     }
 
@@ -45,7 +45,7 @@ public class Main {
         }
 
         // TODO SWITCH THIS BACK TO NORMAL CONTROLLER IF YOU NEED DB MADE
-        dbController = new DBController(Integer.valueOf(args[0]), true);
+        dbController = new DBController(Integer.valueOf(args[0]));
         Main mainView = new Main();
         mainView.show();
     }
@@ -148,7 +148,13 @@ public class Main {
         ansForCurPost = dbController.getAnswersToQuestion(selectedPost.Id);
 
         ansForCurPost.forEach((Block<? super Document>) post -> {
-            if(post.getString("Id").compareTo(selectedPost.AcceptedAnswerId) != 0) {
+            if (selectedPost.AcceptedAnswerId != null){
+                if(post.getString("Id").compareTo(selectedPost.AcceptedAnswerId) != 0) {
+                    out.println("----- ----- ----- ----- -----");
+                    displayBasicAnswerInfo(post);
+                }
+            }
+            else{
                 out.println("----- ----- ----- ----- -----");
                 displayBasicAnswerInfo(post);
             }
@@ -297,6 +303,53 @@ public class Main {
 //        Date date = Utils.getSQLDate();
         Boolean status = dbController.postQuestion(curUserUid, "1", title, body, sTags);
         System.out.println("Thanks for posting your question!");
+    }
+
+    public void answerPost() {
+        if(selectedPost == null || selectedPost.Id == null){
+            System.out.println("Please select a post first");
+            return;
+        }
+        else if(selectedPost.PostTypeId.equals("2")){
+            System.out.println("This post is an answer");
+        }
+        else{
+            System.out.print("Enter your answer:");
+            String answer = scanner.nextLine();
+            if (answer != null){
+                Boolean status = dbController.postAnswer(curUserUid, "2", answer, selectedPost.Id);
+                dbController.incrementAnswers(selectedPost._id);
+            }
+            else {
+                System.out.println("You need to input an answer");
+                answerPost();
+                return;
+            }
+        }
+    }
+
+    public void vote() {
+        if(selectedPost == null || selectedPost.Id == null){
+            System.out.println("Please select a post first");
+            return;
+        }
+        if (curUserUid != null){
+            try{
+                FindIterable<Document> votes = dbController.getVotesInPost(selectedPost.Id);
+                    votes.forEach((Block<? super Document>) vote -> {
+                        if (curUserUid.equals(vote.getString("OwnerUserId"))){
+                            throw new SecurityException("You have already voted on this post!");
+                        }
+                    });
+                }
+            catch(SecurityException e){
+                System.out.println("You have already voted on this post!");
+                return;
+            }
+        }
+        Boolean status = dbController.vote(curUserUid, "2", selectedPost.Id);
+        dbController.incrementScore(selectedPost._id);
+        System.out.println("Thanks for voting!");
     }
 
     public void searchPost() {
