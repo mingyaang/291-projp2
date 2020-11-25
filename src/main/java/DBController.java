@@ -1,6 +1,7 @@
 import com.google.gson.Gson;
 import com.mongodb.BasicDBObject;
 import com.mongodb.Block;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.bulk.UpdateRequest;
 import com.mongodb.client.FindIterable;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Updates.*;
@@ -40,6 +42,8 @@ public class DBController {
     long timeForParsingTerms = 0;
     long timeForParsingData;
     long timeForCreatingIndicies;
+
+    private String regexPtn = "[\\s*.;<>+\\-_)(?,}{\"\\[\\]\\|]+";
 
     public DBController(int port) {
 //        mongoLogger.setLevel(Level.SEVERE); // prevents log popup
@@ -162,7 +166,7 @@ public class DBController {
         String[] words = new String[]{};
 
         if(p.Title != null) {
-            words = p.Title.split("\\W+");
+            words = p.Title.split(regexPtn);
             for(String word : words) {
                 if(word.length() >= 3)
                     terms.add(word.toLowerCase());
@@ -170,7 +174,7 @@ public class DBController {
         }
 
         if(p.Body != null) {
-            words = p.Body.split("\\W+");
+            words = p.Body.split(regexPtn);
             for(String word : words) {
                 if(word.length() >= 3)
                     terms.add(word.toLowerCase());
@@ -178,12 +182,11 @@ public class DBController {
         }
 
         if (p.Tags != null) {
-            words = p.Tags.split("\\W+");
+            words = p.Tags.split(regexPtn);
             for (String word : words) {
                 if (!word.isEmpty())
                     terms.add(word.toLowerCase());
             }
-
         }
 
         p.Terms = new ArrayList<>(terms);
@@ -213,7 +216,7 @@ public class DBController {
                 tagsCol.insertOne(tag);
             }
         }
-        ArrayList<String> terms = getTerms(tile, body);
+        ArrayList<String> terms = getTerms(tile, body, tags);
         String datePosted = new Date().toString();
 
         Document post = new Document("_id", new ObjectId());
@@ -285,12 +288,12 @@ public class DBController {
         return postsCol.find(fil).limit(1);
     }
 
-    private ArrayList<String> getTerms(String title, String body) {
+    private ArrayList<String> getTerms(String title, String body, String[] tags) {
         Set<String> terms = new HashSet<>();
         String[] words = new String[]{};
 
         if(title != null) {
-            words = title.split("\\W+");
+            words = title.split(regexPtn);
             for(String word : words) {
                 if(word.length() >= 3)
                     terms.add(word.toLowerCase());
@@ -298,46 +301,58 @@ public class DBController {
         }
 
         if(body != null) {
-            words = body.split("\\W+");
+            words = body.split(regexPtn);
             for(String word : words) {
                 if(word.length() >= 3)
                     terms.add(word.toLowerCase());
+            }
+        }
+
+        if (tags != null) {
+            for (String word : tags) {
+                if (!word.trim().isEmpty())
+                    terms.add(word.trim().toLowerCase());
             }
         }
         return new ArrayList<>(terms);
     }
 
     public List<Document> search(String[] keywords) {
+        if (keywords.length == 0) {
+            return new ArrayList<Document>();
+        }
+
         boolean allGT3 = true;
         String search = "";
+        String regexSearch = "\\b(?:";
         for (String key : keywords) {
-            search += key + " ";
-            if (key.length() < 3) {
+            search += key.trim() + " ";
+            regexSearch += key.trim().toLowerCase() + "|";
+            if (key.trim().length() < 3) {
                 allGT3 = false;
             }
         }
-        search.trim();
+//        search = search.trim();
+        final String lt3Search = regexSearch.substring(0, regexSearch.length() - 1) + ")\\b";
 
         List<Document> results = new ArrayList<>();
         if (allGT3) {
-            Bson filter = and(eq("PostTypeId", "1"), text(search));
-            postsCol.find(filter).forEach((Block<? super Document>) document -> results.add(document));
+            Pattern pattern = Pattern.compile(lt3Search, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            BasicDBObject basicDBObject = new BasicDBObject("Terms", pattern).append("PostTypeId", "1");
+//            Bson filter = and(eq("PostTypeId", "1"), text(search, new TextSearchOptions().caseSensitive(false)));
+            postsCol.find(basicDBObject).forEach((Block<? super Document>) document -> results.add(document));
         } else {
             Bson filter = eq("PostTypeId", "1");
             postsCol.find(filter).forEach((Block<? super Document>) document -> {
-                for (String key : keywords) {
-                    String title = ((String) document.get("Title"));
-                    String body = ((String) document.get("Body"));
-                    String tags = ((String) document.get("Tags"));
-                    boolean inTitle = title == null ? false : title.contains(key);
-                    boolean inBody = body == null ? false : body.contains(key);
-                    boolean inTags = tags == null ? false : tags.contains(key);
-                    if (inTags || inBody || inTitle ) {
-                        results.add(document);
-                        break;
-                    }
+                String title = ((String) document.get("Title"));
+                String body = ((String) document.get("Body"));
+                String tags = ((String) document.get("Tags"));
+                boolean inTitle = title != null && Utils.stringContains(title.toLowerCase(), lt3Search);
+                boolean inBody = body != null && Utils.stringContains(body.toLowerCase(), lt3Search);
+                boolean inTags = tags != null && Utils.stringContains(tags.toLowerCase(), lt3Search);
+                if (inTags || inBody || inTitle ) {
+                    results.add(document);
                 }
-
             });
         }
 
