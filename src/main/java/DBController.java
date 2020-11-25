@@ -230,7 +230,7 @@ public class DBController {
     }
 
     public boolean postAnswer(String uid, String type, String answer, String quid){
-        ArrayList<String> terms = getTerms(answer, "");
+        ArrayList<String> terms = getTerms(answer, "", null);
         String datePosted = new Date().toString();
         Document post = new Document("_id", new ObjectId());
         post.append("Id", Utils.generateID(21)).append("PostTypeId", type).append("CreationDate", datePosted)
@@ -249,7 +249,7 @@ public class DBController {
         }
         else {
             vote.append("Id", Utils.generateID(21)).append("VoteTypeId", type).append("CreationDate", datePosted)
-                .append("PostId", pid);
+                .append("PostId", pid).append("OwnerUserId", uid);
         }
         votesCol.insertOne(vote);
         return true;
@@ -364,8 +364,8 @@ public class DBController {
         postsCol.updateOne(eq("_id", new ObjectId(String.valueOf(id))), inc("ViewCount", 1));
     }
 
-    public void incrementScore(ObjectId id) {
-        postsCol.updateOne(eq("_id", new ObjectId(String.valueOf(id))), inc("Score", 1));
+    public void incrementScore(String id) {
+        postsCol.updateOne(eq("Id", id), inc("Score", 1));
     }
 
     public void incrementAnswers(ObjectId id) {

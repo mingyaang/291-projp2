@@ -45,7 +45,7 @@ public class Main {
         }
 
         // TODO SWITCH THIS BACK TO NORMAL CONTROLLER IF YOU NEED DB MADE
-        dbController = new DBController(Integer.valueOf(args[0]));
+        dbController = new DBController(Integer.valueOf(args[0]), true);
         Main mainView = new Main();
         mainView.show();
     }
@@ -340,7 +340,8 @@ public class Main {
             }
         }
         Boolean status = dbController.vote(curUserUid, "2", selectedPost.Id);
-        dbController.incrementScore(selectedPost._id);
+        dbController.incrementScore(selectedPost.Id);
+        selectedPost.Score += 1;
         System.out.println("Thanks for voting!");
     }
 
