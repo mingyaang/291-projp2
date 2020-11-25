@@ -212,7 +212,7 @@ public class DBController {
             Document updateResult = tagsCol.findOneAndUpdate(filter, update);
             if (updateResult == null) {
                 Document tag = new Document("_id", new ObjectId());
-                tag.append("Id", Utils.generateID(21)).append("TagName", tags[i].trim()).append("Count", 1);
+                tag.append("Id", Utils.generateID(19)).append("TagName", tags[i].trim()).append("Count", 1);
                 tagsCol.insertOne(tag);
             }
         }
@@ -220,7 +220,7 @@ public class DBController {
         String datePosted = new Date().toString();
 
         Document post = new Document("_id", new ObjectId());
-        post.append("Id", Utils.generateID(21)).append("Tags", formattedTags)
+        post.append("Id", Utils.generateID(19)).append("Tags", formattedTags)
                 .append("PostTypeId", type).append("CreationDate", datePosted).append("OwnerUserId", uid)
                 .append("Score", 0).append("ViewCount", 0).append("AnswerCount", 0).append("CommentCount", 0)
                 .append("FavoriteCount", 0).append("ContentLicense", "CC BY-SA 2.5").append("Title", tile)
@@ -233,7 +233,7 @@ public class DBController {
         ArrayList<String> terms = getTerms(answer, "", null);
         String datePosted = new Date().toString();
         Document post = new Document("_id", new ObjectId());
-        post.append("Id", Utils.generateID(21)).append("PostTypeId", type).append("CreationDate", datePosted)
+        post.append("Id", Utils.generateID(19)).append("PostTypeId", type).append("CreationDate", datePosted)
             .append("OwnerUserId", uid).append("ParentId", quid).append("Score", 0).append("Body", answer)
             .append("CommentCount", 0).append("ContentLicense", "CC BY-SA 2.5").append("Terms", terms);
         postsCol.insertOne(post);
@@ -244,11 +244,11 @@ public class DBController {
         String datePosted = new Date().toString();
         Document vote = new Document("_id", new ObjectId());
         if (uid != null){
-            vote.append("Id", Utils.generateID(21)).append("VoteTypeId", type).append("CreationDate", datePosted)
+            vote.append("Id", Utils.generateID(19)).append("VoteTypeId", type).append("CreationDate", datePosted)
                 .append("PostId", pid).append("OwnerUserId", uid);
         }
         else {
-            vote.append("Id", Utils.generateID(21)).append("VoteTypeId", type).append("CreationDate", datePosted)
+            vote.append("Id", Utils.generateID(19)).append("VoteTypeId", type).append("CreationDate", datePosted)
                 .append("PostId", pid).append("OwnerUserId", uid);
         }
         votesCol.insertOne(vote);
@@ -332,14 +332,13 @@ public class DBController {
                 allGT3 = false;
             }
         }
-//        search = search.trim();
+
         final String lt3Search = regexSearch.substring(0, regexSearch.length() - 1) + ")\\b";
 
         List<Document> results = new ArrayList<>();
         if (allGT3) {
             Pattern pattern = Pattern.compile(lt3Search, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
             BasicDBObject basicDBObject = new BasicDBObject("Terms", pattern).append("PostTypeId", "1");
-//            Bson filter = and(eq("PostTypeId", "1"), text(search, new TextSearchOptions().caseSensitive(false)));
             postsCol.find(basicDBObject).forEach((Block<? super Document>) document -> results.add(document));
         } else {
             Bson filter = eq("PostTypeId", "1");
