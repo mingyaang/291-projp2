@@ -162,7 +162,7 @@ public class DBController {
         String[] words = new String[]{};
 
         if(p.Title != null) {
-            words = p.Title.split("\\W+");
+            words = p.Title.split("[\\s*.;<>+-_)(]+");
             for(String word : words) {
                 if(word.length() >= 3)
                     terms.add(word.toLowerCase());
@@ -170,7 +170,7 @@ public class DBController {
         }
 
         if(p.Body != null) {
-            words = p.Body.split("\\W+");
+            words = p.Body.split("[\\s*.;<>+-_)(]+");
             for(String word : words) {
                 if(word.length() >= 3)
                     terms.add(word.toLowerCase());
@@ -178,12 +178,11 @@ public class DBController {
         }
 
         if (p.Tags != null) {
-            words = p.Tags.split("\\W+");
+            words = p.Tags.split("[\\s*.;<>+-_)(]+");
             for (String word : words) {
                 if (!word.isEmpty())
                     terms.add(word.toLowerCase());
             }
-
         }
 
         p.Terms = new ArrayList<>(terms);
@@ -213,7 +212,7 @@ public class DBController {
                 tagsCol.insertOne(tag);
             }
         }
-        ArrayList<String> terms = getTerms(tile, body);
+        ArrayList<String> terms = getTerms(tile, body, tags);
         String datePosted = new Date().toString();
 
         Document post = new Document("_id", new ObjectId());
@@ -254,12 +253,12 @@ public class DBController {
         return postsCol.find(fil).limit(1);
     }
 
-    private ArrayList<String> getTerms(String title, String body) {
+    private ArrayList<String> getTerms(String title, String body, String[] tags) {
         Set<String> terms = new HashSet<>();
         String[] words = new String[]{};
 
         if(title != null) {
-            words = title.split("\\W+");
+            words = title.split("[\\s*.;<>+-_)(]+");
             for(String word : words) {
                 if(word.length() >= 3)
                     terms.add(word.toLowerCase());
@@ -267,10 +266,17 @@ public class DBController {
         }
 
         if(body != null) {
-            words = body.split("\\W+");
+            words = body.split("[\\s*.;<>+-_)(]+");
             for(String word : words) {
                 if(word.length() >= 3)
                     terms.add(word.toLowerCase());
+            }
+        }
+
+        if (tags != null) {
+            for (String word : tags) {
+                if (!word.trim().isEmpty())
+                    terms.add(word.trim().toLowerCase());
             }
         }
         return new ArrayList<>(terms);
@@ -291,12 +297,12 @@ public class DBController {
                 allGT3 = false;
             }
         }
-        search.trim();
+        search = search.trim();
         final String lt3Search = regexSearch.substring(0, regexSearch.length() - 1) + ")\\b";
 
         List<Document> results = new ArrayList<>();
         if (allGT3) {
-            Bson filter = and(eq("PostTypeId", "1"), text(search));
+            Bson filter = and(eq("PostTypeId", "1"), text(search, new TextSearchOptions().caseSensitive(false)));
             postsCol.find(filter).forEach((Block<? super Document>) document -> results.add(document));
         } else {
             Bson filter = eq("PostTypeId", "1");
