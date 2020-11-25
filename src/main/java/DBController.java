@@ -226,6 +226,32 @@ public class DBController {
         return true;
     }
 
+    public boolean postAnswer(String uid, String type, String answer, String quid){
+        ArrayList<String> terms = getTerms(answer, "");
+        String datePosted = new Date().toString();
+        Document post = new Document("_id", new ObjectId());
+        post.append("Id", Utils.generateID(21)).append("PostTypeId", type).append("CreationDate", datePosted)
+            .append("OwnerUserId", uid).append("ParentId", quid).append("Score", 0).append("Body", answer)
+            .append("CommentCount", 0).append("ContentLicense", "CC BY-SA 2.5").append("Terms", terms);
+        postsCol.insertOne(post);
+        return true;
+    }
+
+    public boolean vote(String uid, String type, String pid){
+        String datePosted = new Date().toString();
+        Document vote = new Document("_id", new ObjectId());
+        if (uid != null){
+            vote.append("Id", Utils.generateID(21)).append("VoteTypeId", type).append("CreationDate", datePosted)
+                .append("PostId", pid).append("OwnerUserId", uid);
+        }
+        else {
+            vote.append("Id", Utils.generateID(21)).append("VoteTypeId", type).append("CreationDate", datePosted)
+                .append("PostId", pid);
+        }
+        votesCol.insertOne(vote);
+        return true;
+    }
+
     public FindIterable<Document> getPostsBy(String uid) {
         // q owned // a owned // q votes // a votes
         double[] res = new double[]{0, 0, 0, 0};
@@ -246,6 +272,11 @@ public class DBController {
 
     public FindIterable<Document> getVotesInPosts(Iterable<String> items) {
         Bson fil = in("PostId", items);
+        return votesCol.find(fil);
+    }
+
+    public FindIterable<Document> getVotesInPost(String id) {
+        Bson fil = and(eq("PostId", id));
         return votesCol.find(fil);
     }
 
@@ -318,4 +349,11 @@ public class DBController {
         postsCol.updateOne(eq("_id", new ObjectId(String.valueOf(id))), inc("ViewCount", 1));
     }
 
+    public void incrementScore(ObjectId id) {
+        postsCol.updateOne(eq("_id", new ObjectId(String.valueOf(id))), inc("Score", 1));
+    }
+
+    public void incrementAnswers(ObjectId id) {
+        postsCol.updateOne(eq("_id", new ObjectId(String.valueOf(id))), inc("AnswerCount", 1));
+    }
 }

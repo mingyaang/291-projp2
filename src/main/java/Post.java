@@ -7,6 +7,8 @@ public class Post {
     public ObjectId _id;
     public String Id;
     public String PostTypeId;
+    public String VoteTypeId;
+    public String PostId;
     public String AcceptedAnswerId;
     public String ParentId;
     public String CreationDate;
