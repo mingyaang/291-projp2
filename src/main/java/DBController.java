@@ -230,7 +230,7 @@ public class DBController {
     }
 
     public boolean postAnswer(String uid, String type, String answer, String quid){
-        ArrayList<String> terms = getTerms(answer, "");
+        ArrayList<String> terms = getTerms(answer, "", null);
         String datePosted = new Date().toString();
         Document post = new Document("_id", new ObjectId());
         post.append("Id", Utils.generateID(21)).append("PostTypeId", type).append("CreationDate", datePosted)
